@@ -1,3 +1,5 @@
+#ifndef TOUCHADVANCED_H
+#define TOUCHADVANCED_H
 /* Teensyduino Core Library
  * http://www.pjrc.com/teensy/
  * Copyright (c) 2017 PJRC.COM, LLC.
@@ -73,6 +75,7 @@ static const uint8_t pin2tsi[] = {
 // time to measure 33 pF is approx 0.25 ms
 // time to measure 1000 pF is approx 4.5 ms
 
+//defaults are current = 2, nscans = 9, prescaler = 2
 int touchReadAdvanced(uint8_t pin, uint8_t current, uint8_t nscan, uint8_t prescaler)
 {
   uint32_t ch;
@@ -112,5 +115,7 @@ int touchReadAdvanced(uint8_t pin)
 {
   return 0; // no Touch sensing :(
 }
+
+#endif
 
 #endif
