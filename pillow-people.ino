@@ -21,7 +21,8 @@ unsigned long heartInterval = 500;
 
 CapSense capPins[3] = {CapSense(15), CapSense(19), CapSense(18)};
 const int nrOfCapPins = sizeof(capPins) / sizeof(CapSense);
-MotorControl motorPins[3] = {MotorControl(9), MotorControl(10), MotorControl(6)};
+int motorPinouts[] = {9, 10, 3};
+MotorControl motorPins[3] = {MotorControl(9), MotorControl(10), MotorControl(3)};
 const int nrOfMotorPins = sizeof(motorPins) / sizeof(MotorControl);
 
 void setup()
@@ -51,7 +52,11 @@ void setup()
   {
     motorPins[i].initialize();
     motorPins[i].startMotor();
-    motorPins[i].deactivatePattern();
+    motorPins[i].activatePattern();
+    motorPins[i].setPatternMinValue(0.f);
+    motorPins[i].setFrequency(0.5 * (i+1));
+    //motorPins[i].deactivatePattern();
+
   }
 }
 
@@ -65,20 +70,26 @@ void loop()
   for (int i = 0; i < nrOfCapPins; i++)
   {
     int capValue = capPins[i].readWithAutoCal();
-    // Serial.printf("%i\t", capValue);
     // capPins[i].logDebugEvents(false);
-    capPins[i].logValues(false);
+    // capPins[i].logValuesNormalized(false);
+    //capPins[i].logValues(false);
     if (!digitalRead(motorActivationPin))
     {
-      motorPins[i].setMotorSpeed(map(capValue, 0, 1000, 0, 255));
+      // int pwmValue = constrain(map(capValue, 0, 1000, 0, 255), 0, 255);
+      //Serial.printf("%i\t", pwmValue);
+      //analogWrite(motorPinouts[i], pwmValue);
+      // int intensity = map(capValue, 0, 1000, 0, 10);
+      float intensity = float(capValue) / 1000.0f;
+      motorPins[i].setPatternMaxValue(intensity);
+      Serial.printf("%i\t", capValue);
     }
     else
     {
-      motorPins[i].setMotorSpeed(0);
+      // motorPins[i].setMotorSpeed(0);
     }
   }
 
-  Serial.printf("10000\n");
+  Serial.printf("1000\n");
 
   delay(10);
 
