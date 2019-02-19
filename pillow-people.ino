@@ -13,16 +13,16 @@
 
 const int resetCalibrationPin = 2;
 const int motorActivationPin = 4;
-int touchPin = 15;
-int pwmLedPin = 23;
-int pwmValue = 0;
+//int touchPin = 15;
+//int pwmLedPin = 23;
+//int pwmValue = 0;
 unsigned long heartStamp;
 unsigned long heartInterval = 500;
 
-CapSense capPins[3] = {CapSense(15), CapSense(19), CapSense(18)};
+CapSense capPins[4] = {CapSense(15), CapSense(16), CapSense(17), CapSense(18)};
 const int nrOfCapPins = sizeof(capPins) / sizeof(CapSense);
-int motorPinouts[] = {9, 10, 3};
-MotorControl motorPins[3] = {MotorControl(9), MotorControl(10), MotorControl(3)};
+//int motorPinouts[] = {10, 9, 20};
+MotorControl motorPins[4] = {MotorControl(10), MotorControl(9), MotorControl(20), MotorControl(21)};
 const int nrOfMotorPins = sizeof(motorPins) / sizeof(MotorControl);
 
 void setup()
@@ -73,7 +73,7 @@ void loop()
     // capPins[i].logDebugEvents(false);
     // capPins[i].logValuesNormalized(false);
     //capPins[i].logValues(false);
-    if (!digitalRead(motorActivationPin))
+    if (true || digitalRead(motorActivationPin))
     {
       // int pwmValue = constrain(map(capValue, 0, 1000, 0, 255), 0, 255);
       //Serial.printf("%i\t", pwmValue);
