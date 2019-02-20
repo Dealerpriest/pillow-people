@@ -21,7 +21,7 @@ public:
   //Debug variables
   void logDebugEvents(bool newLine);
   int slopeSamplingEvent = 0;
-  int slopeThresholdEvent = 0;
+  int slopeNoThresholdEvent = 0;
   int noChangeDurationEvent = 0;
 
 private:
@@ -40,14 +40,15 @@ private:
 
   float _previousFilteredCapvalue = 0;
 
+  // calibration stuff
   unsigned long _minCalSearchStartStamp = 0;
   unsigned long _minValueSlopeStamp = 0;
   unsigned long _slopeSamplingInterval = 250;
-  float _minCalSlopeThreshold = 5.f;
+  float _minCalSlopeThreshold = 3.f;
   unsigned long _minCalNoSlopeDuration = 20000;
 
   unsigned long _maxValueReachedStamp = 0;
-  unsigned long _maxCalNoReachDuration = 10000;
+  unsigned long _maxCalNoReachDuration = 180000;
   int _maxCalDecreaseSpeed = 1;
 };
 

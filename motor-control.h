@@ -19,8 +19,8 @@ public:
   void deactivatePattern();
 
   void setMotorSpeed(int speed);
-  void startMotor();
-  void stopMotor();
+  void turnOn();
+  void turnOff();
 
   void update();
 

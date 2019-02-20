@@ -43,15 +43,15 @@ void CapSense::logDebugEvents(bool newLine = true)
 {
   if (newLine)
   {
-    Serial.printf("%i\t%i\t%i\n", slopeSamplingEvent, slopeThresholdEvent, noChangeDurationEvent);
+    Serial.printf("%i\t%i\t%i\n", slopeSamplingEvent, slopeNoThresholdEvent, noChangeDurationEvent);
   }
   else
   {
-    Serial.printf("%i\t%i\t%i\t", slopeSamplingEvent, slopeThresholdEvent, noChangeDurationEvent);
+    Serial.printf("%i\t%i\t%i\t", slopeSamplingEvent, slopeNoThresholdEvent, noChangeDurationEvent);
   }
 
   slopeSamplingEvent = max(0, slopeSamplingEvent - 5);
-  slopeThresholdEvent = max(0, slopeThresholdEvent - 5);
+  slopeNoThresholdEvent = max(0, slopeNoThresholdEvent - 5);
   noChangeDurationEvent = max(0, noChangeDurationEvent - 5);
 }
 
@@ -70,19 +70,31 @@ void CapSense::autoCalibrate()
     _minValueSlopeStamp = now;
     //Take a sample and calculate slope.
     float slope = abs(_filteredCapValue - _previousFilteredCapvalue);
-    slopeSamplingEvent = 300;
+    
+    //debug
+    slopeSamplingEvent = 50;
 
     if (slope > _minCalSlopeThreshold)
     {
-      //We have aparently moved too much to save as minvalue. Let's reset the "nomotion" timer.
+      //We have apparently moved too much to save as minvalue. Let's reset the "nomotion" timer.
       _minCalSearchStartStamp = now;
-      slopeThresholdEvent = 500;
-    }
-    else if (now - _minCalSearchStartStamp > _minCalNoSlopeDuration)
-    {
-      //TODO: fix so we save a more filtered value than we are sampling.
-      _minCapValue = _filteredCapValue;
-      noChangeDurationEvent = 400;
+    }else{
+      //debug
+      slopeNoThresholdEvent = 200;
+      if (now - _minCalSearchStartStamp > _minCalNoSlopeDuration)
+      {
+        //TODO: fix so we save a more filtered value than we are sampling.
+        _minCapValue = _filteredCapValue;
+        _minCalSearchStartStamp = now;
+        
+        //Debug
+        noChangeDurationEvent = 400;
+      }
+
+      if (now - _maxValueReachedStamp > _maxCalNoReachDuration)
+      {
+        _maxCapValue -= _maxCalDecreaseSpeed;
+      }
     }
 
     _previousFilteredCapvalue = _filteredCapValue;
@@ -94,26 +106,7 @@ void CapSense::autoCalibrate()
     _maxValueReachedStamp = now;
   }
 
-  if (now - _maxValueReachedStamp > _maxCalNoReachDuration)
-  {
-    _maxCapValue -= _maxCalDecreaseSpeed;
-  }
-
   _maxCapValue = max(_minCapValue + _minimalCalRange, _maxCapValue);
-
-  // if (millis() > autoCalMaxStamp + autoCalInterval)
-  // {
-  //   // Serial.println("recalibrating max");
-  //   autoCalMaxStamp = millis();
-  //   if (maxCapValueCandidate < maxCapValue)
-  //   {
-  //     maxCapValue = maxCapValueCandidate;
-  //   }
-  //   else
-  //   {
-  //     maxCapValueCandidate = maxCapValue;
-  //   }
-  // }
 }
 
 int CapSense::readValue()
@@ -137,5 +130,5 @@ int CapSense::readWithAutoCal()
 int CapSense::readRawValue()
 {
   //defaults are current = 2, nscans = 9, prescaler = 2
-  return max(0, touchReadAdvanced(_pin, 15, 30, 2));
+  return max(0, touchReadAdvanced(_pin, 15, 15, 2));
 }

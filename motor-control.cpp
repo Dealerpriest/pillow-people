@@ -24,7 +24,9 @@ void MotorControl::setFrequency(float frequency)
 void MotorControl::setMotorSpeed(int speed)
 {
   _speed = speed;
-  // should we deactivate pattern here
+  // should we deactivate pattern here?
+  // let's do!
+  deactivatePattern();
 }
 
 void MotorControl::activatePattern()
@@ -37,22 +39,24 @@ void MotorControl::deactivatePattern()
   _runPattern = false;
 }
 
+// between 0.0 & 1.0 i.e percent
 void MotorControl::setPatternMaxValue(float maxValue)
 {
   _patternMaxValue = maxValue;
 }
 
+// between 0.0 & 1.0 i.e percent
 void MotorControl::setPatternMinValue(float minValue)
 {
   _patternMinValue = minValue;
 }
 
-void MotorControl::startMotor()
+void MotorControl::turnOn()
 {
   _runMotor = true;
 }
 
-void MotorControl::stopMotor()
+void MotorControl::turnOff()
 {
   _runMotor = false;
 }
@@ -63,7 +67,6 @@ void MotorControl::update()
   {
     if (_runPattern)
     {
-      //TODO: convert interval to factor for sin function.
       float now = millis() / 1000.0f;
       float offset = -(2 / PI);
       float normalized = (sin((TWO_PI * _frequency * now) + offset) + 1.0f) * 0.5;
@@ -71,6 +74,7 @@ void MotorControl::update()
     }
     else
     {
+      //We will do analogWrite either way. So nothing happens here.
     }
     analogWrite(_pin, _speed);
   }
