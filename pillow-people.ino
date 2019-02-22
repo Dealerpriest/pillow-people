@@ -19,7 +19,11 @@
 //int pwmLedPin = 23;
 //int pwmValue = 0;
 unsigned long heartStamp;
-unsigned long heartInterval = 500;
+unsigned long heartDefaultInterval = 500;
+unsigned long heartCurrentInterval = 500;
+
+const int ledPin1 = 1;
+const int ledPin2 = 2;
 
 CapSense capPins[] = {
   CapSense(15), CapSense(16), CapSense(17), CapSense(18), 
@@ -27,7 +31,7 @@ CapSense capPins[] = {
   };
 const int nrOfCapPins = sizeof(capPins) / sizeof(CapSense);
 // const int nrOfCapPins = 1;
-//int motorPinouts[] = {10, 9, 20};
+
 MotorControl motorPins[] = {
   MotorControl(10), MotorControl(9), MotorControl(20), MotorControl(21), 
   MotorControl(6), MotorControl(5), MotorControl(4), MotorControl(3)
@@ -39,6 +43,16 @@ const int nrOfButtons = sizeof(buttons) / sizeof(Bounce);
 
 bool runMotors = false;
 
+enum Mode {normal, ledDebugging};
+Mode currentMode = normal;
+
+
+unsigned long minValueRecalculatedStamp = 0;
+unsigned long led1BlinkStamp = 0;
+unsigned long led1BlinkInterval = 15;
+unsigned long led2BlinkStamp = 0;
+unsigned long led2BlinkInterval = 15;
+
 
 void setup()
 {
@@ -47,7 +61,13 @@ void setup()
   pinMode(14,INPUT_PULLUP);
   
   pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH);
+  // digitalWrite(LED_BUILTIN, HIGH);
+
+  pinMode(ledPin1, OUTPUT);
+  // digitalWrite(ledPin1, HIGH);
+  
+  pinMode(ledPin2, OUTPUT);
+  digitalWrite(ledPin2, HIGH);
 
   for (int i = 0; i < nrOfCapPins; ++i)
   {
@@ -64,21 +84,24 @@ void setup()
   }
   heartStamp = millis();
 
+  minValueRecalculatedStamp = millis();
+
   for (int i = 0; i < nrOfMotorPins; i++)
   {
     motorPins[i].initialize();
     motorPins[i].turnOn();
     motorPins[i].activatePattern();
     motorPins[i].setPatternMinValue(0.f);
-    motorPins[i].setFrequency(0.2 * float(i)*0.5+1.0f);
+    motorPins[i].setPatternMaxValue(0.f);
+    motorPins[i].setFrequency(1.5 * (float(i)*0.05+1.0f));
     //motorPins[i].deactivatePattern();
-
   }
+
+  digitalWrite(ledPin2, LOW);
 }
 
 void loop()
 {
-
   for(int i = 0; i < nrOfButtons; i++)
   {
     buttons[i].update();
@@ -107,31 +130,82 @@ void loop()
     motorPins[i].update();
   }
 
+  heartCurrentInterval = heartDefaultInterval;
+  led1BlinkInterval = 0;
+  led2BlinkInterval = 0;
+  bool maxValueShrinking = false;
   for (int i = 0; i < nrOfCapPins; i++)
   {
     int capValue = capPins[i].readWithAutoCal();
     // capPins[i].logDebugEvents(false);
     // capPins[i].logValuesNormalized(false);
-    // capPins[i].logValues(false);
+    capPins[i].logValues(false);
 
-      float intensity = float(capValue) / 1000.0f - 0.1;
-      motorPins[i].setPatternMaxValue(intensity);
+    if(capPins[i].valueIsMoving){
+      heartCurrentInterval = 15;
+    }
+
+    if(capPins[i].minValueRecalculated){
+      minValueRecalculatedStamp = millis();
+    }
+
+    if(capPins[i].minValueExpanded){
+      led1BlinkInterval = 40;
+    }
+
+    if(capPins[i].maxValueShrinking){
+      maxValueShrinking = true;
+    }
+
+    if(capPins[i].maxValueExpanded){
+      led2BlinkInterval = 40;
+    }
+
+    float intensity = float(capValue) / 1000.0f - 0.1;
+    motorPins[i].setPatternMaxValue(intensity);
   }
+
+  if(millis() - minValueRecalculatedStamp < 1000){
+    digitalWrite(ledPin1, HIGH);  
+  }else{
+    digitalWrite(ledPin1, LOW);
+  }
+
+  if(led1BlinkInterval != 0 && millis() - led1BlinkStamp > led1BlinkInterval){
+    led1BlinkStamp = millis();
+    digitalWrite(ledPin1, !digitalRead(ledPin1));
+  }
+
+  if(led2BlinkInterval != 0){
+    if(millis() - led2BlinkStamp > led2BlinkInterval){
+      led2BlinkStamp = millis();
+      digitalWrite(ledPin2, !digitalRead(ledPin2));
+    }
+  }
+  else{
+    if(maxValueShrinking){
+      digitalWrite(ledPin2, HIGH);
+    }else{
+      digitalWrite(ledPin2, LOW);
+    }
+  }
+  
 
   // Serial.println();
   Serial.printf("1000\n");
 
-  delay(10);
-
-  if (millis() - heartStamp > heartInterval)
-  {
-    heartStamp = millis();
-    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-  }
+  delay(5);
 
   if (millis() < 2000)
   {
     resetAllCapCalibration();
+  }
+
+  // HEART BEAT ******************************
+  if (millis() - heartStamp > heartCurrentInterval)
+  {
+    heartStamp = millis();
+    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
   }
 }
 

@@ -24,13 +24,19 @@ public:
   int slopeNoThresholdEvent = 0;
   int noChangeDurationEvent = 0;
 
+  bool valueIsMoving = false;
+  bool minValueExpanded = false;
+  bool minValueRecalculated = false;
+  bool maxValueShrinking = false;
+  bool maxValueExpanded = false;
+
 private:
   int readRawValue();
 
   int _pin;
   int _minCapValue = 100000;
   // int _minCapValueCandidate = 0;
-  int _maxCapValue = 0;
+  float _maxCapValue = 0;
 
   int _minimalCalRange = 50;
   // int _maxCapValueCandidate = 100000;
@@ -48,8 +54,8 @@ private:
   unsigned long _minCalNoSlopeDuration = 20000;
 
   unsigned long _maxValueReachedStamp = 0;
-  unsigned long _maxCalNoReachDuration = 180000;
-  int _maxCalDecreaseSpeed = 1;
+  unsigned long _maxCalNoReachDuration = 300000;
+  float _maxCalDecreaseSpeed = 1;
 };
 
 #endif

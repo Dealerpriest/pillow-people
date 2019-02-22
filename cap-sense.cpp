@@ -12,18 +12,20 @@ void CapSense::initialize()
 void CapSense::resetMinMaxCapValues()
 {
   _minCapValue = 100000;
-  _maxCapValue = 0;
+  _maxCapValue = 0.f;
+
+  _filteredCapValue = readRawValue();
 }
 
 void CapSense::logValues(bool newLine = true)
 {
   if (newLine)
   {
-    Serial.printf("%i\t%i\t%i\n", _filteredCapValue, _minCapValue, _maxCapValue);
+    Serial.printf("%i\t%i\t%i\n", _filteredCapValue, _minCapValue, int(_maxCapValue));
   }
   else
   {
-    Serial.printf("%i\t%i\t%i\t", _filteredCapValue, _minCapValue, _maxCapValue);
+    Serial.printf("%i\t%i\t%i\t", _filteredCapValue, _minCapValue, int(_maxCapValue));
   }
 }
 
@@ -56,57 +58,73 @@ void CapSense::logDebugEvents(bool newLine = true)
 }
 
 void CapSense::autoCalibrate()
-{
+{  
   unsigned long now = millis();
 
+  minValueExpanded = false;
   if (_filteredCapValue < _minCapValue)
   {
     _minCapValue = _filteredCapValue;
+
+    minValueExpanded = true;
   }
 
-  //Search and identify if we've been "still" long enough (i.e. the slope has been very small for a long enough time)
+  //Search and identify if we've been "still" long enough (i.e. the slope has been very small (under the threshold) for a long enough duration)
   if (now - _minValueSlopeStamp > _slopeSamplingInterval)
   {
     _minValueSlopeStamp = now;
-    //Take a sample and calculate slope.
+    //Calculate slope since last slopeSampling.
     float slope = abs(_filteredCapValue - _previousFilteredCapvalue);
     
     //debug
     slopeSamplingEvent = 50;
 
+    valueIsMoving = false;
     if (slope > _minCalSlopeThreshold)
     {
       //We have apparently moved too much to save as minvalue. Let's reset the "nomotion" timer.
       _minCalSearchStartStamp = now;
+
+      valueIsMoving = true;
     }else{
       //debug
       slopeNoThresholdEvent = 200;
+
+      
+      minValueRecalculated = false;
       if (now - _minCalSearchStartStamp > _minCalNoSlopeDuration)
       {
-        //TODO: fix so we save a more filtered value than we are sampling.
         _minCapValue = _filteredCapValue;
         _minCalSearchStartStamp = now;
         
         //Debug
         noChangeDurationEvent = 400;
-      }
-
-      if (now - _maxValueReachedStamp > _maxCalNoReachDuration)
-      {
-        _maxCapValue -= _maxCalDecreaseSpeed;
+        minValueRecalculated = true;
       }
     }
-
     _previousFilteredCapvalue = _filteredCapValue;
   }
 
-  if (_filteredCapValue > _maxCapValue)
+  maxValueExpanded = false;
+  if (_filteredCapValue > int(_maxCapValue))
   {
-    _maxCapValue = _filteredCapValue;
+    _maxCapValue = float(_filteredCapValue);
     _maxValueReachedStamp = now;
+
+    _maxCalDecreaseSpeed = _maxCapValue - _minCapValue;
+    _maxCalDecreaseSpeed /= 50000.f;
+
+    maxValueExpanded = true;
   }
 
-  _maxCapValue = max(_minCapValue + _minimalCalRange, _maxCapValue);
+  maxValueShrinking = false;
+  if (now - _maxValueReachedStamp > _maxCalNoReachDuration && _maxCapValue > _minCapValue + _minimalCalRange)
+  {
+    _maxCapValue -= _maxCalDecreaseSpeed;
+    maxValueShrinking = true;
+  }
+
+  // _maxCapValue = max(_minCapValue + _minimalCalRange, _maxCapValue);
 }
 
 int CapSense::readValue()
