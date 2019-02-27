@@ -18,7 +18,7 @@ public:
   void activatePattern();
   void deactivatePattern();
 
-  void setMotorSpeed(int speed);
+  void setMotorSpeed(float speed);
   void turnOn();
   void turnOff();
 
@@ -28,6 +28,9 @@ private:
   int _pin;
   int _speed; // current power of motor
   float _frequency;
+  float _phase = 0.0f;
+  float _updateStamp = 0;
+  float _prevUpdateStamp = 0;
   bool _runPattern = false;
   float _patternMaxValue = 1.0f;
   float _patternMinValue = 0.0f;

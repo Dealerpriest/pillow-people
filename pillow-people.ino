@@ -53,6 +53,22 @@ unsigned long led1BlinkInterval = 15;
 unsigned long led2BlinkStamp = 0;
 unsigned long led2BlinkInterval = 15;
 
+int lightPatternThreshold = 100;
+int mediumPatternThreshold = 400;
+int heavyPatternThreshold = 850;
+
+float lightPatternInterval = 5.0f;
+float mediumPatternInterval = 2.5f;
+float heavyPatternInterval = 5.0f;
+
+float lightPatternMinIntensity = 0.05f;
+float lightPatternMaxIntensity = 0.2f;
+
+float mediumPatternMinIntensity = 0.2f;
+float mediumPatternMaxIntensity = 0.6f;
+
+float heavyPatternMinIntensity = 0.0f;
+float heavyPatternMaxIntensity = 1.0f;
 
 void setup()
 {
@@ -92,7 +108,7 @@ void setup()
     motorPins[i].turnOn();
     motorPins[i].activatePattern();
     motorPins[i].setPatternMinValue(0.f);
-    motorPins[i].setPatternMaxValue(0.f);
+    motorPins[i].setPatternMaxValue(1.f);
     motorPins[i].setFrequency(1.5 * (float(i)*0.05+1.0f));
     //motorPins[i].deactivatePattern();
   }
@@ -138,31 +154,57 @@ void loop()
   {
     int capValue = capPins[i].readWithAutoCal();
     // capPins[i].logDebugEvents(false);
-    // capPins[i].logValuesNormalized(false);
-    capPins[i].logValues(false);
+    capPins[i].logValuesNormalized(false);
+    // capPins[i].logValues(false);
 
+    
+    // LED DEBUGGING
     if(capPins[i].valueIsMoving){
       heartCurrentInterval = 15;
     }
-
     if(capPins[i].minValueRecalculated){
       minValueRecalculatedStamp = millis();
     }
-
     if(capPins[i].minValueExpanded){
       led1BlinkInterval = 40;
     }
-
     if(capPins[i].maxValueShrinking){
       maxValueShrinking = true;
     }
-
     if(capPins[i].maxValueExpanded){
       led2BlinkInterval = 40;
     }
 
-    float intensity = float(capValue) / 1000.0f - 0.1;
-    motorPins[i].setPatternMaxValue(intensity);
+
+    // SET PATTERNS
+    float intensity = float(capValue);
+    if (intensity < lightPatternThreshold){
+      motorPins[i].turnOff();
+    } else {
+      motorPins[i].turnOn();
+    }
+
+    motorPins[i].activatePattern();
+    
+    if(intensity < mediumPatternThreshold){
+      motorPins[i].setInterval(lightPatternInterval);
+      motorPins[i].setPatternMinValue(lightPatternMinIntensity);
+      motorPins[i].setPatternMaxValue(lightPatternMaxIntensity);
+    } else if(intensity < heavyPatternThreshold){
+      motorPins[i].setInterval(mediumPatternInterval);
+      motorPins[i].setPatternMinValue(mediumPatternMinIntensity);
+      motorPins[i].setPatternMaxValue(mediumPatternMaxIntensity);
+    } else { 
+      // motorPins[i].deactivatePattern();
+      // motorPins[i].setMotorSpeed(0.15f);
+
+      motorPins[i].setInterval(heavyPatternInterval);
+      motorPins[i].setPatternMinValue(heavyPatternMinIntensity);
+      motorPins[i].setPatternMaxValue(heavyPatternMaxIntensity);
+    }
+    
+
+    // motorPins[i].setPatternMaxValue(intensity);
   }
 
   if(millis() - minValueRecalculatedStamp < 1000){
@@ -191,10 +233,10 @@ void loop()
   }
   
 
-  // Serial.println();
-  Serial.printf("1000\n");
+  Serial.println();
+  // Serial.printf("1000\n");
 
-  delay(5);
+  delay(3);
 
   if (millis() < 2000)
   {
@@ -207,6 +249,12 @@ void loop()
     heartStamp = millis();
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
   }
+}
+
+
+// TODO: Make this shit proper!!
+int getMappedIntensityValue(int input, int inputMargin, int outputCenter) {
+  return map(input, input-inputMargin, input+inputMargin, 0, outputCenter);
 }
 
 void turnOnAllMotors(){

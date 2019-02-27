@@ -18,12 +18,16 @@ void MotorControl::setInterval(float interval)
 
 void MotorControl::setFrequency(float frequency)
 {
+  if(frequency == 0.0f){
+    // setMotorSpeed(0);
+    // deactivatePattern();
+  }
   _frequency = frequency;
 }
 
-void MotorControl::setMotorSpeed(int speed)
+void MotorControl::setMotorSpeed(float speed)
 {
-  _speed = speed;
+  _speed = MAXMOTORSPEED * speed;
   // should we deactivate pattern here?
   // let's do!
   deactivatePattern();
@@ -67,9 +71,13 @@ void MotorControl::update()
   {
     if (_runPattern)
     {
-      float now = millis() / 1000.0f;
+      _prevUpdateStamp = _updateStamp;
+      _updateStamp = millis() / 1000.0f;
+      float delta = _updateStamp - _prevUpdateStamp;
       float offset = -(2 / PI);
-      float normalized = (sin((TWO_PI * _frequency * now) + offset) + 1.0f) * 0.5;
+
+      _phase += TWO_PI * delta * _frequency;
+      float normalized = (sin((_phase) + offset) + 1.0f) * 0.5;
       _speed = MAXMOTORSPEED * (normalized * (_patternMaxValue - _patternMinValue) + _patternMinValue);
     }
     else
