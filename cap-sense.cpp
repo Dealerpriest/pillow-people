@@ -147,6 +147,9 @@ int CapSense::readWithAutoCal()
 
 int CapSense::readRawValue()
 {
+  // current = 0 - 15
+  // scans = 0 - 31
+  // prescaler = 0 - 7
   //defaults are current = 2, nscans = 9, prescaler = 2
   return max(0, touchReadAdvanced(_pin, 15, 15, 2));
 }

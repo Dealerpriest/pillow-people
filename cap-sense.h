@@ -42,7 +42,7 @@ private:
   // int _maxCapValueCandidate = 100000;
   int _filteredCapValue = 0;
   int _normalizedCapValue = 0;
-  const float _Q_measure = 0.1;
+  const float _Q_measure = 0.08;
 
   float _previousFilteredCapvalue = 0;
 
@@ -50,7 +50,7 @@ private:
   unsigned long _minCalSearchStartStamp = 0;
   unsigned long _minValueSlopeStamp = 0;
   unsigned long _slopeSamplingInterval = 250;
-  float _minCalSlopeThreshold = 7.f;
+  float _minCalSlopeThreshold = 9.f;
   unsigned long _minCalNoSlopeDuration = 20000;
 
   unsigned long _maxValueReachedStamp = 0;
