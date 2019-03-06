@@ -38,7 +38,7 @@ private:
   // int _minCapValueCandidate = 0;
   float _maxCapValue = 0;
 
-  int _minimalCalRange = 50;
+  int _minimalCalRange = 70;
   // int _maxCapValueCandidate = 100000;
   int _filteredCapValue = 0;
   int _normalizedCapValue = 0;

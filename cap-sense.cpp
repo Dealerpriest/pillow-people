@@ -12,7 +12,7 @@ void CapSense::initialize()
 void CapSense::resetMinMaxCapValues()
 {
   _minCapValue = 100000;
-  _maxCapValue = 0.f;
+  _maxCapValue = 0.0f;
 
   _filteredCapValue = readRawValue();
 }
@@ -124,7 +124,7 @@ void CapSense::autoCalibrate()
     maxValueShrinking = true;
   }
 
-  // _maxCapValue = max(_minCapValue + _minimalCalRange, _maxCapValue);
+  _maxCapValue = max(_minCapValue + _minimalCalRange, _maxCapValue);
 }
 
 int CapSense::readValue()

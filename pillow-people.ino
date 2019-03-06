@@ -41,7 +41,7 @@ const int nrOfMotorPins = sizeof(motorPins) / sizeof(MotorControl);
 Bounce buttons[3] = { Bounce(11, 8), Bounce(12, 8), Bounce(14, 8) };
 const int nrOfButtons = sizeof(buttons) / sizeof(Bounce);
 
-bool runMotors = false;
+bool runMotors = true;
 
 enum Mode {normal, ledDebugging};
 Mode currentMode = normal;
@@ -54,9 +54,9 @@ unsigned long led2BlinkStamp = 0;
 unsigned long led2BlinkInterval = 15;
 
 //Threshold ett värde mellan 0 och 1000. Definerar övergång mellan patterns
-int lightPatternThreshold = 300; // 100
-int mediumPatternThreshold = 600; // 400
-int heavyPatternThreshold = 850; // 850
+int lightPatternThreshold = 200; // 100
+int mediumPatternThreshold = 500; // 400
+int heavyPatternThreshold = 750; // 850
 
 //Hur lång tid en svängning tar i sekunder.
 float lightPatternInterval = 5.0f;
@@ -93,6 +93,14 @@ void setup()
   {
     capPins[i].initialize();
   }
+
+   for (int j = 0; j < 50; j++) {
+      for (int i = 0; i < nrOfButtons; i++) {
+        buttons[i].update();
+        buttons[i].risingEdge();
+        buttons[i].fallingEdge();
+      }
+   }
 
   Serial.begin(57600);
 
@@ -163,7 +171,7 @@ void loop()
     int capValue = capPins[i].readWithAutoCal();
     // capPins[i].logDebugEvents(false);
     capPins[i].logValuesNormalized(false);
-    // capPins[i].logValues(false);
+    //capPins[i].logValues(false);
 
     
     // LED DEBUGGING
@@ -300,17 +308,22 @@ void blockingBlink(int blinks, int millis) {
 }
 
 void blockingTestMotors() {
-    for (int i = 0; i < nrOfMotorPins; i++)
+    turnOffAllMotors();
+    for(int i = 0; i < nrOfMotorPins; i++)
       {
-        motorPins[i].setMotorSpeed(0);
-        motorPins[i].deactivatePattern();
+        motorPins[i].update();
       }
+
     for (int i = 0; i < nrOfMotorPins; i++)
       {
-        digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+        motorPins[i].turnOn();
         motorPins[i].setMotorSpeed(0.5);
-        delay(1000);
+        motorPins[i].update();
+        delay(1500);
+
         motorPins[i].setMotorSpeed(0);
-        motorPins[i].activatePattern();
+        //motorPins[i].turnOff();
+         motorPins[i].update();
+        //motorPins[i].activatePattern();
       }
 }
