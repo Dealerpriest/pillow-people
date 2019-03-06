@@ -53,13 +53,17 @@ unsigned long led1BlinkInterval = 15;
 unsigned long led2BlinkStamp = 0;
 unsigned long led2BlinkInterval = 15;
 
-int lightPatternThreshold = 100;
-int mediumPatternThreshold = 400;
-int heavyPatternThreshold = 850;
+//Threshold ett värde mellan 0 och 1000. Definerar övergång mellan patterns
+int lightPatternThreshold = 300; // 100
+int mediumPatternThreshold = 600; // 400
+int heavyPatternThreshold = 850; // 850
 
+//Hur lång tid en svängning tar i sekunder.
 float lightPatternInterval = 5.0f;
 float mediumPatternInterval = 2.5f;
 float heavyPatternInterval = 5.0f;
+
+//Amplituden för pattern för min och max. Ett värde mellan 0 - 1
 
 float lightPatternMinIntensity = 0.05f;
 float lightPatternMaxIntensity = 0.2f;
@@ -135,6 +139,10 @@ void loop()
     }
   }
 
+  if(buttons[1].risingEdge()){
+     blockingTestMotors();
+  }
+
   if(buttons[2].risingEdge()){
     blockingBlink(50, 20);
     resetAllCapCalibration();
@@ -179,12 +187,13 @@ void loop()
     // SET PATTERNS
     float intensity = float(capValue);
     if (intensity < lightPatternThreshold){
-      motorPins[i].turnOff();
+      motorPins[i].setMotorSpeed(0);
     } else {
-      motorPins[i].turnOn();
+      //motorPins[i].();
+      motorPins[i].activatePattern();
     }
 
-    motorPins[i].activatePattern();
+    //motorPins[i].activatePattern();
     
     if(intensity < mediumPatternThreshold){
       motorPins[i].setInterval(lightPatternInterval);
@@ -288,4 +297,20 @@ void blockingBlink(int blinks, int millis) {
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
     delay(millis);
   }
+}
+
+void blockingTestMotors() {
+    for (int i = 0; i < nrOfMotorPins; i++)
+      {
+        motorPins[i].setMotorSpeed(0);
+        motorPins[i].deactivatePattern();
+      }
+    for (int i = 0; i < nrOfMotorPins; i++)
+      {
+        digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+        motorPins[i].setMotorSpeed(0.5);
+        delay(1000);
+        motorPins[i].setMotorSpeed(0);
+        motorPins[i].activatePattern();
+      }
 }
